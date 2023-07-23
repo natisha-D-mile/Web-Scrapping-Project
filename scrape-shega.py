@@ -4,9 +4,9 @@ import requests
 from bs4 import BeautifulSoup
 import time
 
-# My Telegram bot token & channel ID
-bot_token = '6180127208:AAFbR1fLEur7dVqpUClJ8K4Yov4loZjZmrc'
-chat_id = '-1001807421456'
+# My Telegram bot token & channel ID (For the sake of privacy, I made these 'Empty' at least for the moment:)
+bot_token = ''  
+chat_id = ''
 message_count = 0
 
 
@@ -16,7 +16,7 @@ def find_megamenu_links(url):
     # BeautifulSoup then parses this content, making it accessible for data extraction
     soup = BeautifulSoup(response.content, 'html.parser')
     # Find all anchor tags with id='sm_megamenu_97'
-    links = soup.find_all('a', id='sm_megamenu_98')
+    links = soup.find_all('a', id='sm_megamenu_97')
     '''
     links = soup.find_all('a', class_='sm_megamenu_head sm_megamenu_drop')    sm_megamenu_haschild
                  #better not to use _ while using id
@@ -38,7 +38,7 @@ def find_megamenu_links(url):
 
 
 # Function to send data to the Telegram channel
-def send_to_telegram(bot_token, chat_id, message, img_url=None):
+def send_to_telegram(bot_token, chat_id, message, link=None, img_url=None):
     # Define the API URL based on whether there is an image or not
     api_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     if img_url:
@@ -49,6 +49,10 @@ def send_to_telegram(bot_token, chat_id, message, img_url=None):
         "chat_id": chat_id,
         "caption": message
     }
+
+    if link:
+        data["caption"] += f"\nLink: {link}"
+
 
     # If an image URL is provided, add it to the data dictionary
     if img_url:
@@ -65,9 +69,8 @@ def send_to_telegram(bot_token, chat_id, message, img_url=None):
     except Exception as e:
         print(f"An error occurred: {e}")
 
+
 # Function to scrape product information from a given URL
-
-
 def web_scrape_product_info(url):
     global message_count
     response = requests.get(url)
@@ -79,6 +82,7 @@ def web_scrape_product_info(url):
             image_tag = product.find('img', class_='product-image-photo')
             title_tag = product.find('a', class_='product-item-link')
             price_tag = product.find('span', class_='price')
+            link_tag = title_tag.get('href')
             '''    
             description_link = title_tag.get('href')
             resp = requests.get(description_link)
@@ -95,13 +99,13 @@ def web_scrape_product_info(url):
                 # Prepare the message to be sent to the Telegram channel
                 message = f"{title}\nPrice: {price}"
                 # Call the send_to_telegram function to send the message to the channel
-                send_to_telegram(bot_token, chat_id, message, image_url)
+                send_to_telegram(bot_token, chat_id, message, link_tag, image_url)
                 message_count += 1
 
                 # Make a 30-second delay every 15 messages
                 if message_count % 15 == 0:
-                    print("Waiting for 30 seconds...")
-                    time.sleep(30)
+                     print("Waiting for 30 seconds...")
+                     time.sleep(30)
     else:
         print("No Product Information Found!")
 
